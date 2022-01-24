@@ -1,0 +1,82 @@
+{
+	"isEnabled": 1,
+	"portNum": 2,
+	"portName": "218.2.135.1",
+	"speed": 2000,
+	"dataBits": 8,
+	"stopbBits": 1,
+
+	"collectPeriod": 5,
+	"Devices": [
+		{
+			"isEnabled": 1,
+			"stationAddress": 1,
+			"DeviceName": "RTU1",
+			"collectPeriod": 10,
+			"collectMode": 0,
+			"InnerIdBase": 100,
+			"DataSequence": 1,
+			"vecCommands": [
+				{
+					"functionCode": 3,
+					"vecOutData": [
+						{
+							"name": "sdfas",
+							"startAddr": 2,
+							"offset": 0,
+							"dataType": 1,
+							"len": 2,
+							"innerId": 1001,
+							"indexCode": 2005
+						},
+						{
+							"name": "sdfas",
+							"startAddr": 2,
+							"offset": 2,
+							"dataType": 1,
+							"len": 2,
+							"innerId": 1002,
+							"indexCode": 2006
+						}
+					]
+				}
+			]
+		},
+		{
+			"isEnabled": 1,
+			"stationAddress": 2,
+			"DeviceName": "RTU2",
+			"collectPeriod": 10,
+			"collectMode": 0,
+			"InnerIdBase": 200,
+			"DataSequence": 1,
+			"vecCommands": [
+				{
+					"functionCode": 3,
+					"vecOutData": [
+						{
+							"name": "sdfas",
+							"startAddr": 16,
+							"offset": 0,
+							"dataType": 6,
+							"len": 2,
+							"innerId": 1001,
+							"indexCode": 2005
+						},
+						{
+							"name": "sdfas",
+							"startAddr": 2,
+							"offset": 4,
+							"dataType": 6,
+							"len": 2,
+							"innerId": 1002,
+							"indexCode": 2006
+						}
+					]
+				}
+			]
+		}
+	]
+}
+
+
