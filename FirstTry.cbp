@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="FirstTry" />
+		<Option pch_mode="2" />
+		<Option compiler="arm-elf-gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/FirstTry" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-Wmissing-include-dirs" />
+					<Add option="-Wall" />
+					<Add option="-std=c++11" />
+					<Add option="-g" />
+				</Compiler>
+				<Linker>
+					<Add library="pthread" />
+				</Linker>
+			</Target>
+			<Target title="FCU2201">
+				<Option output="bin/Debug/FirstTry" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="arm-elf-gcc" />
+				<Compiler>
+					<Add option="-Wmissing-include-dirs" />
+					<Add option="-Wall" />
+					<Add option="-std=c++11" />
+				</Compiler>
+				<Linker>
+					<Add library="pthread" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/FirstTry" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="arm-elf-gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-fexceptions" />
+		</Compiler>
+		<Unit filename="AIGCJson/AIGCJson.hpp" />
+		<Unit filename="JsonFileModel.h" />
+		<Unit filename="MyDatabase.cpp" />
+		<Unit filename="MyDatabase.h" />
+		<Unit filename="MySerialDAQ.cpp" />
+		<Unit filename="MySerialDAQ.h" />
+		<Unit filename="MyThread.cpp" />
+		<Unit filename="MyThread.h" />
+		<Unit filename="MyTimer.cpp" />
+		<Unit filename="MyTimer.h" />
+		<Unit filename="Port1.json" />
+		<Unit filename="Port2.json" />
+		<Unit filename="Settings.h" />
+		<Unit filename="libmodbus/modbus-config.h" />
+		<Unit filename="libmodbus/modbus-data.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="libmodbus/modbus-private.h" />
+		<Unit filename="libmodbus/modbus-rtu-private.h" />
+		<Unit filename="libmodbus/modbus-rtu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="libmodbus/modbus-rtu.h" />
+		<Unit filename="libmodbus/modbus-tcp-private.h" />
+		<Unit filename="libmodbus/modbus-tcp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="libmodbus/modbus-tcp.h" />
+		<Unit filename="libmodbus/modbus.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="libmodbus/modbus.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="picojson.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+			<envvars />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,0 +1,348 @@
+# depslib dependency file v1.0
+1642867543 source:/home/forlinx/work/projects/FirstTry/main.cpp
+	<iostream>
+	<thread>
+	<chrono>
+	<fstream>
+	<string>
+	<streambuf>
+	<memory>
+	<atomic>
+	<ctime>
+	<ratio>
+	<functional>
+	"AIGCJson/AIGCJson.hpp"
+	"JsonFileModel.h"
+	"picojson.h"
+	"MySerialDAQ.h"
+	"MyDatabase.h"
+
+1639452663 /home/forlinx/work/projects/FirstTry/AIGCJson/AIGCJson.hpp
+	<list>
+	<map>
+	<vector>
+	<string>
+	<iostream>
+	"rapidjson/document.h"
+	"rapidjson/writer.h"
+	"rapidjson/stringbuffer.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/document.h
+	"reader.h"
+	"internal/meta.h"
+	"internal/strfunc.h"
+	"memorystream.h"
+	"encodedstream.h"
+	<new>
+	<limits>
+	<compare>
+	<iterator>
+	<utility>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/reader.h
+	"allocators.h"
+	"stream.h"
+	"encodedstream.h"
+	"internal/clzll.h"
+	"internal/meta.h"
+	"internal/stack.h"
+	"internal/strtod.h"
+	<limits>
+	<intrin.h>
+	<nmmintrin.h>
+	<emmintrin.h>
+	<arm_neon.h>
+	<stdexcept>
+	"rapidjson/error/error.h"
+	"rapidjson/reader.h"
+	"error/error.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/allocators.h
+	"rapidjson.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/rapidjson.h
+	<cstdlib>
+	<cstring>
+	"rapidjson/..."
+	<string>
+	"msinttypes/stdint.h"
+	"msinttypes/inttypes.h"
+	<stdint.h>
+	<inttypes.h>
+	<endian.h>
+	"rapidjson/..."
+	<cassert>
+	<cassert>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/msinttypes/stdint.h
+	<stdint.h>
+	<limits.h>
+	<wchar.h>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/msinttypes/inttypes.h
+	"stdint.h"
+	<inttypes.h>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/stream.h
+	"rapidjson.h"
+	"encodings.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/encodings.h
+	"rapidjson.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/encodedstream.h
+	"stream.h"
+	"memorystream.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/memorystream.h
+	"stream.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/clzll.h
+	"../rapidjson.h"
+	<intrin.h>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/meta.h
+	"../rapidjson.h"
+	<type_traits>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/stack.h
+	"../allocators.h"
+	"swap.h"
+	<cstddef>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/swap.h
+	"../rapidjson.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/strtod.h
+	"ieee754.h"
+	"biginteger.h"
+	"diyfp.h"
+	"pow10.h"
+	<climits>
+	<limits>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/ieee754.h
+	"../rapidjson.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/biginteger.h
+	"../rapidjson.h"
+	<intrin.h>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/diyfp.h
+	"../rapidjson.h"
+	"clzll.h"
+	<limits>
+	<intrin.h>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/pow10.h
+	"../rapidjson.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/error/error.h
+	"../rapidjson.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/strfunc.h
+	"../stream.h"
+	<cwchar>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/writer.h
+	"stream.h"
+	"internal/clzll.h"
+	"internal/meta.h"
+	"internal/stack.h"
+	"internal/strfunc.h"
+	"internal/dtoa.h"
+	"internal/itoa.h"
+	"stringbuffer.h"
+	<new>
+	<intrin.h>
+	<nmmintrin.h>
+	<emmintrin.h>
+	<arm_neon.h>
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/dtoa.h
+	"itoa.h"
+	"diyfp.h"
+	"ieee754.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/internal/itoa.h
+	"../rapidjson.h"
+
+1633932250 /home/forlinx/work/projects/FirstTry/AIGCJson/rapidjson/stringbuffer.h
+	"stream.h"
+	"internal/stack.h"
+	<utility>
+	"internal/stack.h"
+
+1643038719 source:/home/forlinx/work/projects/FirstTry/MyDatabase.cpp
+	"MyDatabase.h"
+
+1642952114 /home/forlinx/work/projects/FirstTry/MyDatabase.h
+	<map>
+	<mutex>
+	"JsonFileModel.h"
+	"MySerialDAQ.h"
+
+1643039195 /home/forlinx/work/projects/FirstTry/JsonFileModel.h
+	<vector>
+	<string>
+	"AIGCJson/AIGCJson.hpp"
+
+1643039765 /home/forlinx/work/projects/FirstTry/MySerialDAQ.h
+	<atomic>
+	<fstream>
+	<iostream>
+	<string>
+	"AIGCJson/AIGCJson.hpp"
+	"picojson.h"
+	"JsonFileModel.h"
+	<errno.h>
+	<termios.h>
+	<sys/stat.h>
+	<sys/time.h>
+	<fcntl.h>
+	<unistd.h>
+	"MyTimer.h"
+
+1639380746 /home/forlinx/work/projects/FirstTry/picojson.h
+	<algorithm>
+	<cstdio>
+	<cstdlib>
+	<cstring>
+	<cstddef>
+	<iostream>
+	<iterator>
+	<limits>
+	<map>
+	<stdexcept>
+	<string>
+	<vector>
+	<utility>
+	<cmath>
+	<float.h>
+	<mathimf.h>
+	<math.h>
+	<cerrno>
+	<cinttypes>
+	<inttypes.h>
+	<locale.h>
+
+1639640193 /home/forlinx/work/projects/FirstTry/MyTimer.h
+	<iostream>
+	<mutex>
+	<thread>
+	<functional>
+	<condition_variable>
+	<atomic>
+
+1643039994 source:/home/forlinx/work/projects/FirstTry/MySerialDAQ.cpp
+	"MySerialDAQ.h"
+	"MyDatabase.h"
+
+1639619952 source:/home/forlinx/work/projects/FirstTry/MyThread.cpp
+	"MyThread.h"
+	<assert.h>
+
+1639619965 /home/forlinx/work/projects/FirstTry/MyThread.h
+	<pthread.h>
+	<cstdio>
+	<cstdlib>
+	<functional>
+
+1639636698 source:/home/forlinx/work/projects/FirstTry/MyTimer.cpp
+	"MyTimer.h"
+
+1639929488 source:/home/forlinx/work/projects/FirstTry/libmodbus/modbus-tcp.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<errno.h>
+	<unistd.h>
+	<signal.h>
+	<sys/types.h>
+	<winsock2.h>
+	<ws2tcpip.h>
+	<sys/socket.h>
+	<sys/ioctl.h>
+	<netinet/in_systm.h>
+	<netinet/in.h>
+	<netinet/ip.h>
+	<netinet/tcp.h>
+	<arpa/inet.h>
+	<netdb.h>
+	"modbus-private.h"
+	"modbus-tcp.h"
+	"modbus-tcp-private.h"
+
+1639929031 /home/forlinx/work/projects/FirstTry/libmodbus/modbus-private.h
+	<stdint.h>
+	<sys/time.h>
+	"stdint.h"
+	<time.h>
+	<sys/types.h>
+	"modbus-config.h"
+	"modbus.h"
+
+1639929718 /home/forlinx/work/projects/FirstTry/libmodbus/modbus-config.h
+
+1639928532 /home/forlinx/work/projects/FirstTry/libmodbus/modbus.h
+	<sys/param.h>
+	<stdint.h>
+	"stdint.h"
+	"modbus-tcp.h"
+	"modbus-rtu.h"
+
+1634563762 /home/forlinx/work/projects/FirstTry/libmodbus/modbus-tcp.h
+	"modbus.h"
+	<winsock2.h>
+
+1634563762 /home/forlinx/work/projects/FirstTry/libmodbus/modbus-rtu.h
+	"modbus.h"
+
+1634563762 /home/forlinx/work/projects/FirstTry/libmodbus/modbus-tcp-private.h
+
+1639928991 source:/home/forlinx/work/projects/FirstTry/libmodbus/modbus-data.c
+	<stdlib.h>
+	<stdint.h>
+	"stdint.h"
+	<string.h>
+	<assert.h>
+	<winsock2.h>
+	<arpa/inet.h>
+	"modbus-config.h"
+	"modbus.h"
+	<byteswap.h>
+	<libkern/OSByteOrder.h>
+
+1634563762 source:/home/forlinx/work/projects/FirstTry/libmodbus/modbus-rtu.c
+	<stdio.h>
+	<stdlib.h>
+	<errno.h>
+	<fcntl.h>
+	<string.h>
+	<unistd.h>
+	<assert.h>
+	"modbus-private.h"
+	"modbus-rtu.h"
+	"modbus-rtu-private.h"
+	<sys/ioctl.h>
+	<linux/serial.h>
+
+1634563762 /home/forlinx/work/projects/FirstTry/libmodbus/modbus-rtu-private.h
+	<stdint.h>
+	"stdint.h"
+	<windows.h>
+	<termios.h>
+
+1639929764 source:/home/forlinx/work/projects/FirstTry/libmodbus/modbus.c
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+	<stdarg.h>
+	<errno.h>
+	<limits.h>
+	<time.h>
+	<unistd.h>
+	"modbus-config.h"
+	"modbus.h"
+	"modbus-private.h"
+
