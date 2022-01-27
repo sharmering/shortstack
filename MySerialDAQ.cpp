@@ -37,6 +37,7 @@ thread usrSerialCollectStart(int port)
     return t1;
 }
 
+
 MySerialDAQ::MySerialDAQ(int portNum)
 {
     isCanceled = false;
@@ -44,7 +45,8 @@ MySerialDAQ::MySerialDAQ(int portNum)
     portnum = portNum;
     if (readConfFile() != -1)
     {
-        cout << "read Port" << portNum << ".json file successfully, set serial port ok." << endl;
+        cout << "read Port" << portNum << ".json file successfully, set serial port ok."
+             << endl;
     }
     else
     {
@@ -93,7 +95,7 @@ void MySerialDAQ::start()
                 }
                 else
                 {
-                    this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    this_thread::sleep_for(std::chrono::milliseconds(3000));
                 }
             }
             if (bFileExist)
@@ -101,23 +103,42 @@ void MySerialDAQ::start()
                 //start to collect
                 cout << "thread of " << this_thread::get_id() << endl;
                 gettimeofday(&TmStart, NULL);
+
+                if(conf == NULL)
+                {
+                    if (readConfFile() == -1)
+                    {
+                        cout << "read port configuration file fail." << endl;
+                        bFileExist = false;
+                        this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    }
+                    else
+                    {
+                        memset(commFlag, 0, sizeof(commFlag));
+                        memset(commTries, 0, sizeof(commTries));
+                    }
+                }
                 //poll process
                 for (size_t d = 0; d < conf.Devices.size(); d++)
                 {
                     RtuDevice device = conf.Devices[d];
                     if (device.IsEnabled > 0)
                     {
+                        if(device.collectPeriod == 0)
+                            device.collectPeriod = 15;
                         if (TmEnd.tv_sec % device.collectPeriod == 0 && TmStart.tv_sec != TmEnd.tv_sec)
                         {
-                            CDbService::DbEntry* entries = new CDbService::DbEntry[device.vecCommands.size()];
+                            CDbService::DbEntry* entries = new
+                            CDbService::DbEntry[device.vecCommands.size()];
                             for (size_t c = 0; c < device.vecCommands.size(); c++)
                             {
                                 //assambly the command
                                 ModbusCmdOut cmd = device.vecCommands[c];
                                 int regNum = cmd.vecOutData[cmd.vecOutData.size() - 1].offset +
-                                             get_length_by_datatype(cmd.functionCode, cmd.vecOutData[cmd.vecOutData.size() - 1].dataType);
+                                             get_length_by_datatype(cmd.functionCode,
+                                                                    cmd.vecOutData[cmd.vecOutData.size() - 1].dataType);
                                 strBuf = GetReadCommand(device.stationAddress, cmd.functionCode,
-                                                        cmd.vecOutData[0].startAddr, regNum);
+                                                        cmd.registerStartAddr, regNum);
                                 //flush the recv buffer
                                 tcflush(port_fd, TCIFLUSH);
                                 int len = write(port_fd, strBuf.c_str(), (int)strBuf.size());
@@ -128,16 +149,21 @@ void MySerialDAQ::start()
                                 }
                                 len = readRev(buf);
                                 //check validation of data
-                                if (len > 0 && validate_return_data(device.stationAddress, cmd.functionCode, regNum, buf, len))
+                                if (len > 0 && validate_return_data(
+                                            device.stationAddress, cmd.functionCode, regNum, buf,len))
                                 {
                                     //parse_return_data(buf, len);
-                                    for (size_t r = 0; r < cmd.vecOutData.size(); r++)
+                                    int count = cmd.vecOutData.size();
+                                    for (int r = 0; r < count; r++)
                                     {
                                         ModbusDataParse* dp = &cmd.vecOutData[r];
+                                        //遥信处理
                                         if (dp->dataType & DataType::dtCoil)
                                         {
                                             int byteNum = dp->offset / 8;
                                             int bitNum = dp->offset % 8;
+                                            if (byteNum == buf[2])
+                                                break;
                                             int value = (buf[3 + byteNum] >> bitNum) & 0x01;
                                             if (dp->dataType & DataType::dtBitReverse)
                                             {
@@ -155,83 +181,117 @@ void MySerialDAQ::start()
                                             dbEntry.sDigiValue = value;
                                             dbEntry.divider = 1;
                                         }
-                                        else if(dp->dataType & DataType::dtHolding2Coil)
+                                        //遥测转遥信处理
+                                        else if (dp->dataType & DataType::dtHolding2Coil)
                                         {
                                             //telemetry to telesignaling
+                                            unsigned int value = 0;
+                                            if (dp->len == 1)
+                                                value = buf[3];
+                                            else if (dp->len == 2)
+                                            {
+                                                value = buf[3];
+                                                value <<= 8;
+                                                value += buf[4];
+                                            }
+                                            else if (dp->len == 4)
+                                            {
+                                                value = buf[3];
+                                                value <<= 8;
+                                                value += buf[4];
+                                                value <<= 8;
+                                                value += buf[5];
+                                                value <<= 8;
+                                                value += buf[6];
+                                            }
                                             std::vector<int> innerIdList(dp->h2cInnerIdList);
-                                            if(innerIdList.size() > 0 && dp->len * 8 >= innerIdList.size())
+                                            int listSize = innerIdList.size();
+                                            if ( listSize > 0 && (dp->len * 8) >= listSize)
                                             {
                                                 CDbService::DbEntry* h2cEntries = new CDbService::DbEntry[innerIdList.size()];
-                                                for(size_t l = 0; l < innerIdList.size(); l++)
+                                                for (size_t l = 0; l < innerIdList.size(); l++)
                                                 {
                                                     CDbService::DbEntry& dbEntry = h2cEntries[r];
-                                                    dbEntry.innerId = dp->innerId;
+                                                    dbEntry.innerId = dp->h2cInnerIdList[l];
                                                     dbEntry.dataType = 1;   //coil or discrete input
                                                     dbEntry.time = TmStart.tv_sec;
-                                                    dbEntry.sDigiValue = value;
+                                                    dbEntry.sDigiValue = (value >> l) & 0x01;
                                                     dbEntry.divider = 1;
                                                 }
                                                 DbService.ModbusMasterUpdate(h2cEntries, innerIdList.size());
-                                                delete []h2cEntries;
+                                                delete[]h2cEntries;
                                             }
                                         }
-                                        else
+                                        //遥测处理
+                                        else if(dp->offset + dp->len <= cmd.totalByteNum)
                                         {
-                                            if (dp->offset + dp->len <= regNum)
+                                            uint8_t tmp[8] = {0};
+                                            long long value = 0;
+                                            for(int index = 0; index < dp->len; index++)
                                             {
-                                                char tmp[8] = { 0 };
-                                                long long value = 0;
-                                                double dvalue = 0.0f;
-                                                for (int index = 0; index < dp->len; index++)
+                                                if(dp->dataType & DataType::dtByteOrder)
+                                                {
+                                                    const int off = (dp->byteOrder >> (index * 4)) & 0x0F;
+                                                    tmp[index] = buf[dp->offset + off];
+                                                }
+                                                else if(dp->dataType & DataType::dtLittleEndian)
+                                                {
+                                                    tmp[dp->len - index -1] = buf[dp->offset + index];
+                                                }
+                                                else
                                                 {
                                                     tmp[index] = buf[dp->offset + index];
                                                 }
-                                                switch (dp->dataType & 0xFF)
+                                            }
+                                            switch (dp->dataType & 0xFF)
+                                            {
+                                            case DataType::dtChar:
+                                            case DataType::dtInt16:
+                                            case DataType::dtInt32:
+                                            case DataType::dtInt64:
+                                            {
+                                                switch (dp->len)
                                                 {
-                                                case DataType::dtInt16:
-                                                case DataType::dtInt32:
-                                                case DataType::dtInt64:
-                                                    switch (dp->len)
-                                                    {
-                                                    case 1:
-                                                        if (dp->dataType & DataType::dtBitReverse)
-                                                            value = (~(*(char*)tmp)) & 0xff;
-                                                        else
-                                                            value = *(char*)tmp;
-                                                        break;
-
-                                                    case 2:
-                                                        if (dp->dataType & DataType::dtBitReverse)
-                                                            value = (~(*(short*)tmp)) & 0xffff;
-                                                        else
-                                                            value = *(short*)tmp;
-                                                        break;
-
-                                                    case 3:
-                                                    case 4:
-                                                        if (dp->dataType & DataType::dtBitReverse)
-                                                            value = (~(*(int*)tmp)) & 0xffffffff;
-                                                        else
-                                                            value = *(int*)tmp;
-                                                        break;
-
-                                                    case 8:
-                                                        if (dp->dataType & DataType::dtBitReverse)
-                                                            value = ~(*(long long*)tmp);
-                                                        else
-                                                            value = *(long long*)tmp;
-                                                        break;
-
-                                                    default:
-                                                        value = 0;
-                                                        break;
-                                                    }
-                                                    dvalue = (double)value;
+                                                case 1:
+                                                    if (dp->dataType & DataType::dtBitReverse)
+                                                        value = (~(*(char*)tmp)) & 0xff;
+                                                    else
+                                                        value = *(char*)tmp;
                                                     break;
-                                                case DataType::dtUint16:
-                                                case DataType::dtUint32:
-                                                case DataType::dtUint64:
-                                                    switch (dp->len)
+
+                                                case 2:
+                                                    if (dp->dataType & DataType::dtBitReverse)
+                                                        value = (~(*(short*)tmp)) & 0xffff;
+                                                    else
+                                                        value = *(short*)tmp;
+                                                    break;
+
+                                                case 3:
+                                                case 4:
+                                                    if (dp->dataType & DataType::dtBitReverse)
+                                                        value = (~(*(int*)tmp)) & 0xffffffff;
+                                                    else
+                                                        value = *(int*)tmp;
+                                                    break;
+
+                                                case 8:
+                                                    if (dp->dataType & DataType::dtBitReverse)
+                                                        value = ~(*(long long*)tmp);
+                                                    else
+                                                        value = *(long long*)tmp;
+                                                    break;
+
+                                                default:
+                                                    value = 0;
+                                                    break;
+                                                }
+                                            }
+                                            break;
+                                            case DataType::dtUchar:
+                                            case DataType::dtUint16:
+                                            case DataType::dtUint32:
+                                            case DataType::dtUint64:
+                                            switch (dp->len)
                                                     {
                                                     case 1:
                                                         if (dp->dataType & DataType::dtBitReverse)
@@ -266,31 +326,50 @@ void MySerialDAQ::start()
                                                         value = 0;
                                                         break;
                                                     }
-                                                    dvalue = (double)value;
-                                                    break;
-                                                case DataType::dtFloat:
-                                                    //float val;
+                                            break;
+
+                                            case DataType::dtFloat:
+                                            {
+                                                if (dp->len == sizeof(float))
+                                                {
+                                                    float val = (double)ByteToFloat(tmp);
                                                     //memcpy(&val, tmp, sizeof(float));
                                                     //binvert((char*)&val, sizeof(val));
-                                                    dvalue = (double)ByteToFloat(tmp);
-                                                    //value = (long long)((double)val * 1000);
-                                                    break;
-                                                case DataType::dtDouble:
-                                                    // double dval;
+                                                    //dvalue =
+                                                    val -= dp->deviation;
+                                                    value = val * dp->coef;
+                                                }
+                                            }
+                                            break;
+                                            case DataType::dtDouble:
+                                            {
+                                                if (dp->len == sizeof(double))
+                                                {
+                                                    double val = ByteToDouble(tmp);
                                                     //memcpy(&val, tmp, sizeof(double));
                                                     //binvert((char*)&val, sizeof(val));
-                                                    dvalue = ByteToDouble(tmp);
-                                                    //dvalue = value;
-                                                    break;
+                                                    val -= dp->deviation;
+                                                    value = (val * dp->coef);
                                                 }
-                                                //update the database
-                                                cout << "dp->innerId=" << dp->innerId << ": " << dvalue << endl;
-                                                CDbService::DbEntry& dbEntry = entries[r];
-                                                dbEntry.innerId = dp->innerId;
-                                                dbEntry.time = TmStart.tv_sec;
-                                                dbEntry.dbValue = (value - dp->deviation)*dp->coef;
-                                                dbEntry.divider = 1;
                                             }
+                                            break;
+                                            }
+
+                                            if (dp->dataType & DataType::dtBCD)
+                                            {
+                                                value = BCD_TO_BIN64(value);
+                                            }
+
+                                            //update the database
+                                            cout << "dp->innerId=" << dp->innerId << ": " << value << endl;
+                                            CDbService::DbEntry& dbEntry = entries[r];
+                                            dbEntry.innerId = dp->innerId;
+                                            dbEntry.time = TmStart.tv_sec;
+                                            dbEntry.dataType = 0;
+                                            dbEntry.dbValue = (value - dp->deviation) * dp->coef;
+                                            if (abs(CDbService::GetInstance()->GetInnerIdValue(dp->innerId) - dbEntry.dbValue) < dp->interval)
+                                                dbEntry.dbValue = CDbService::GetInstance()->GetInnerIdValue(dp->innerId);
+                                            dbEntry.divider = 1;
                                         }
                                     }
                                     DbService.ModbusMasterUpdate(entries, device.vecCommands.size());
@@ -350,7 +429,8 @@ void MySerialDAQ::start()
                         string strCmd = vecControls[i];
                         int len = write(port_fd, strCmd.c_str(), (int)strCmd.size());
                         if (len < 0)
-                        {   //write failure
+                        {
+                            //write failure
                             //  cout << __FILE__ ": " << __LINE__ << ":write command error" << endl;
                             this_thread::sleep_for(chrono::milliseconds(100));
                         }
@@ -381,6 +461,10 @@ void MySerialDAQ::start()
                     }
                     vecControls.clear();
                 }
+            }
+            else
+            {
+                conf = NULL;
             }
         }
         //close the serial port
@@ -416,7 +500,8 @@ int MySerialDAQ::readConfFile()
     bool check = JsonHelper::JsonToObject(conf, strJson);
     if (check == false)
     {
-        cout << "convert json file of " << strJsonFileName << " to PortConf object failed." << endl;
+        cout << "convert json file of " << strJsonFileName <<
+             " to PortConf object failed." << endl;
         return -1;
     }
     if (conf.portNum == portnum && conf.isEnabled)
@@ -428,13 +513,15 @@ int MySerialDAQ::readConfFile()
             cout << "open port of " + to_string(portnum) + " failed." << endl;
             return -1;
         }
-        return set_serial(port_fd, conf.speed, (char)conf.parity.c_str()[0], conf.dataBits, conf.stopbBits);
+        return set_serial(port_fd, conf.speed, (char)conf.parity.c_str()[0],
+                          conf.dataBits, conf.stopbBits);
     }
     else
         return 0;
 }
 
-int MySerialDAQ::set_serial(int fd, int nSpeed, int nBits, char nEvent, int nStop)
+int MySerialDAQ::set_serial(int fd, int nSpeed, int nBits, char nEvent,
+                            int nStop)
 {
     struct termios newttys1, oldttys1;
 
@@ -445,7 +532,8 @@ int MySerialDAQ::set_serial(int fd, int nSpeed, int nBits, char nEvent, int nSto
         return -1;
     }
     bzero(&newttys1, sizeof(newttys1));
-    newttys1.c_cflag |= (CLOCAL | CREAD); /*CREAD 开启串行数据接收，CLOCAL并打开本地连接模式*/
+    newttys1.c_cflag |= (CLOCAL |
+                         CREAD); /*CREAD 开启串行数据接收，CLOCAL并打开本地连接模式*/
 
     newttys1.c_cflag &= ~CSIZE;/*设置数据位*/
     /*数据位选择*/
@@ -455,7 +543,7 @@ int MySerialDAQ::set_serial(int fd, int nSpeed, int nBits, char nEvent, int nSto
         newttys1.c_cflag |= CS7;
         break;
     case 9:
-        ////newttys1.c_cflag |= CS9;
+    ////newttys1.c_cflag |= CS9;
     default:
         newttys1.c_cflag |= CS8;
     }
@@ -464,12 +552,14 @@ int MySerialDAQ::set_serial(int fd, int nSpeed, int nBits, char nEvent, int nSto
     {
     case '0':  /*奇校验*/
         newttys1.c_cflag |= PARENB;/*开启奇偶校验*/
-        newttys1.c_iflag |= (INPCK | ISTRIP);/*INPCK打开输入奇偶校验；ISTRIP去除字符的第八个比特  */
+        newttys1.c_iflag |= (INPCK |
+                             ISTRIP);/*INPCK打开输入奇偶校验；ISTRIP去除字符的第八个比特  */
         newttys1.c_cflag |= PARODD;/*启用奇校验(默认为偶校验)*/
         break;
     case 'E':/*偶校验*/
         newttys1.c_cflag |= PARENB; /*开启奇偶校验  */
-        newttys1.c_iflag |= (INPCK | ISTRIP);/*打开输入奇偶校验并去除字符第八个比特*/
+        newttys1.c_iflag |= (INPCK |
+                             ISTRIP);/*打开输入奇偶校验并去除字符第八个比特*/
         newttys1.c_cflag &= ~PARODD;/*启用偶校验*/
         break;
     case 'N': /*无奇偶校验*/
@@ -501,7 +591,8 @@ int MySerialDAQ::set_serial(int fd, int nSpeed, int nBits, char nEvent, int nSto
         break;
     }
     /*设置停止位*/
-    if (nStop == 1)/*设置停止位；若停止位为1，则清除CSTOPB，若停止位为2，则激活CSTOPB*/
+    if (nStop ==
+            1)/*设置停止位；若停止位为1，则清除CSTOPB，若停止位为2，则激活CSTOPB*/
     {
         newttys1.c_cflag &= ~CSTOPB;/*默认为一位停止位； */
     }
@@ -513,7 +604,8 @@ int MySerialDAQ::set_serial(int fd, int nSpeed, int nBits, char nEvent, int nSto
     /*设置最少字符和等待时间，对于接收字符和等待时间没有特别的要求时*/
     newttys1.c_cc[VTIME] = 0;/*非规范模式读取时的超时时间；*/
     newttys1.c_cc[VMIN] = 0; /*非规范模式读取时的最小字符数*/
-    tcflush(fd, TCIFLUSH);/*tcflush清空终端未完成的输入/输出请求及数据；TCIFLUSH表示清空正收到的数据，且不读取出来 */
+    tcflush(fd,
+            TCIFLUSH);/*tcflush清空终端未完成的输入/输出请求及数据；TCIFLUSH表示清空正收到的数据，且不读取出来 */
 
     /*激活配置使其生效*/
     if ((tcsetattr(fd, TCSANOW, &newttys1)) != 0)
@@ -533,7 +625,7 @@ int MySerialDAQ::readRev(char* revBuf)
     FD_SET(port_fd, &rfds);
     timeval timeout;
     timeout.tv_sec = 0;  //秒
-    timeout.tv_usec = 500 * 1100;  //微秒
+    timeout.tv_usec = 500 * 1000;  //微秒
     int retval = select(port_fd + 1, &rfds, NULL, NULL, &timeout);
 
     if (retval <= 0)
@@ -554,7 +646,8 @@ int MySerialDAQ::add_cmd_to_queue(string cmd)
     return vecControls.size();
 }
 
-string MySerialDAQ::GetReadCommand(int addr, int functionCode, int regStart, int regNum)
+string MySerialDAQ::GetReadCommand(int addr, int functionCode, int regStart,
+                                   int regNum)
 {
     string cmd;
     unsigned char temp[10] = {0};
@@ -578,7 +671,8 @@ int MySerialDAQ::get_length_by_datatype(int code, int datatype)
 {
     if(code == 1 || code == 2)
         return 1;
-    else{
+    else
+    {
         switch(datatype)
         {
         case 0:
@@ -618,7 +712,8 @@ string MySerialDAQ::byte_array_to_string(char* key, int length)
 }
 
 
-bool MySerialDAQ::validate_return_data(int stationNum, int functionCode, int regNum, char* buf, int len)
+bool MySerialDAQ::validate_return_data(int stationNum, int functionCode,
+                                       int regNum, char* buf, int len)
 {
     if (buf[0] != stationNum || buf[1] != functionCode) return false;
     switch (functionCode)
@@ -642,4 +737,24 @@ bool MySerialDAQ::validate_return_data(int stationNum, int functionCode, int reg
         break;
     }
     return true;
+}
+
+long long MySerialDAQ::BCD_TO_BIN64(long long bcd)
+{
+    return ((bcd & 0xf) * 1) +
+        (((bcd & 0xf0) >> 4) * 10ULL) +
+        (((bcd & 0xf00) >> 8) * 100ULL) +
+        (((bcd & 0xf000) >> 12) * 1000ULL) +
+        (((bcd & 0xf0000) >> 16) * 10000ULL) +
+        (((bcd & 0xf00000) >> 20) * 100000ULL) +
+        (((bcd & 0xf000000) >> 24) * 1000000ULL) +
+        (((bcd & 0xf0000000) >> 28) * 10000000ULL) +
+        (((bcd & 0xf00000000) >> 32) * 100000000ULL) +
+        (((bcd & 0xf000000000) >> 36) * 1000000000ULL) +
+        (((bcd & 0xf0000000000) >> 40) * 10000000000ULL) +
+        (((bcd & 0xf00000000000) >> 44) * 100000000000ULL) +
+        (((bcd & 0xf000000000000) >> 48) * 1000000000000ULL) +
+        (((bcd & 0xf0000000000000) >> 52) * 10000000000000ULL) +
+        (((bcd & 0xf00000000000000) >> 56) * 100000000000000ULL) +
+        (((bcd & 0xf000000000000000) >> 60) * 1000000000000000ULL);
 }

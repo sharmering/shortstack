@@ -107,20 +107,22 @@ public:
     *input:长度为4的字节数组
     *output:
     */
-    float ByteToFloat(char* byteArray)
+    float ByteToFloat(uint8_t* byteArray)
     {
         return *((float*)byteArray);
     }
 
-    double ByteToDouble(char* byteArray)
+    double ByteToDouble(uint8_t* byteArray)
     {
         return *((double*)byteArray);
     }
 
+    long long BCD_TO_BIN64(long long bcd);
+
 private:
 	int portnum = 0;
-    string strJsonFileName;
-    Modbus_RtuSerialPortConf conf;
+    string strJsonFileName("");
+    Modbus_RtuSerialPortConf conf = NULL;
     int port_fd = -1;
     int collectPeriod = 0;
     atomic<bool> isCanceled;

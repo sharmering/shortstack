@@ -23,6 +23,8 @@ class DataType
 public:
 	enum DATATYPE
 	{
+		dtChar,
+		dtUchar,
 		dtInt16,
 		dtUint16,
 		dtInt32,
@@ -139,18 +141,18 @@ class ModbusDataParse
 {
 public:
 	string name;
-	int startAddr;
 	int offset;
 	int dataType;
 	int len;
 	int innerId;
 	float deviation;
 	float coef;
-	int indexCode;
+	int byteOrder;
+	//int indexCode;
 	float interval;
 	vector<int> h2cInnerIdList;
 	vector<string> h2cNameList;
-	AIGC_JSON_HELPER(name, startAddr, offset, dataType, len, innerId, deviation, coef, indexCode,
+	AIGC_JSON_HELPER(name, offset, dataType, len, innerId, deviation, coef, byteOrder,
                     interval, h2cInnerIdList, h2cNameList);
 };
 
@@ -158,8 +160,10 @@ class ModbusCmdOut
 {
 public:
 	int functionCode;
+	int registerStartAddr;
+	int totalByteNum;
 	vector<ModbusDataParse> vecOutData;
-	AIGC_JSON_HELPER(functionCode, vecOutData);
+	AIGC_JSON_HELPER(functionCode, registerStartAddr, totalByteNum, vecOutData);
 };
 
 class Modbus_TcpDevice

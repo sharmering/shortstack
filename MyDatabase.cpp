@@ -63,7 +63,7 @@ void CDbService::ModbusMasterUpdate(DbEntry* entries, int nentries)
 		{
 			DbEntry* dbEntry = it->second;
 			assert(dbEntry);
-			if(dbEntry->dataType == 0 && dbEntry->dbValue != entry.dbValue) //|| first <= 2)
+			if(dbEntry->dataType == 0 && abs(dbEntry->dbValue - entry.dbValue) > 0.0005) //|| first <= 2)
 			{
 				dbEntry->dbValue = entry.dbValue;
 				dbEntry->divider = entry.divider;
