@@ -61,10 +61,15 @@ public:
 
 	CDbService();
 	~CDbService();
+private:
+    void PrintMasterUpdateValue(DbEntry * entry);
+    void UpdateSlaveModbusTable(DbEntry * entry, int nentries);
 protected:
 	std::map<int, DbEntry*> m_entries;
 	std::mutex m_mutex;
-
+	ModbusDatabaseConf m_modbusDbConf;
+    std::vector<float> m_modbusTeleMetrySlaveTable;
+    std::vector<char> m_modbusTeleSignalSlaveTable;
 };
 
 extern CDbService DbService;

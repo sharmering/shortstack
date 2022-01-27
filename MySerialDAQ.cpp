@@ -53,7 +53,7 @@ MySerialDAQ::MySerialDAQ(int portNum)
         /*
         int rc = -1;
         ctx = modbus_new_rtu(strPort
-            conf.baudrate,
+            rtuSerialPortConf.baudrate,
             serialConf.parity,
             serialConf.dataBits,
             serialConf.stopBits);
@@ -104,7 +104,7 @@ void MySerialDAQ::start()
                 cout << "thread of " << this_thread::get_id() << endl;
                 gettimeofday(&TmStart, NULL);
 
-                if(conf == NULL)
+                if(rtuSerialPortConf.isEnabled == 0)
                 {
                     if (readConfFile() == -1)
                     {
@@ -119,9 +119,9 @@ void MySerialDAQ::start()
                     }
                 }
                 //poll process
-                for (size_t d = 0; d < conf.Devices.size(); d++)
+                for (size_t d = 0; d < rtuSerialPortConf.Devices.size(); d++)
                 {
-                    RtuDevice device = conf.Devices[d];
+                    RtuDevice device = rtuSerialPortConf.Devices[d];
                     if (device.IsEnabled > 0)
                     {
                         if(device.collectPeriod == 0)
@@ -417,7 +417,7 @@ void MySerialDAQ::start()
                     }
                 }
                 //delay 100ms
-                this_thread::sleep_for(std::chrono::milliseconds(conf.speed));
+                this_thread::sleep_for(std::chrono::milliseconds(rtuSerialPortConf.speed));
                 gettimeofday(&TmEnd, NULL);
                 //ready to send control command
                 int vecCount = (int)vecControls.size();
@@ -464,7 +464,7 @@ void MySerialDAQ::start()
             }
             else
             {
-                conf = NULL;
+                rtuSerialPortConf.isEnabled = 0;
             }
         }
         //close the serial port
@@ -497,14 +497,14 @@ int MySerialDAQ::readConfFile()
     strJson.erase(std::remove(strJson.begin(), strJson.end(), '\t'), strJson.end());
     //string to object
 
-    bool check = JsonHelper::JsonToObject(conf, strJson);
+    bool check = JsonHelper::JsonToObject(rtuSerialPortConf, strJson);
     if (check == false)
     {
         cout << "convert json file of " << strJsonFileName <<
              " to PortConf object failed." << endl;
         return -1;
     }
-    if (conf.portNum == portnum && conf.isEnabled)
+    if (rtuSerialPortConf.portNum == portnum && rtuSerialPortConf.isEnabled)
     {
         port_fd = open(strPort.c_str(), O_RDWR | O_NOCTTY);
         if (port_fd < 0)
@@ -513,8 +513,8 @@ int MySerialDAQ::readConfFile()
             cout << "open port of " + to_string(portnum) + " failed." << endl;
             return -1;
         }
-        return set_serial(port_fd, conf.speed, (char)conf.parity.c_str()[0],
-                          conf.dataBits, conf.stopbBits);
+        return set_serial(port_fd, rtuSerialPortConf.speed, (char)rtuSerialPortConf.parity.c_str()[0],
+                          rtuSerialPortConf.dataBits, rtuSerialPortConf.stopbBits);
     }
     else
         return 0;

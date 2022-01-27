@@ -245,6 +245,10 @@ public:
 	string parity;
 	int stopbBits;
 	vector<RtuDevice> Devices;
+	Modbus_RtuSerialPortConf()
+	{
+	    isEnabled = 0;
+	}
 	AIGC_JSON_HELPER(isEnabled, portNum, portName, speed, dataBits, parity, stopbBits, Devices);
 };
 
@@ -326,8 +330,7 @@ public:
 };
 
 
-
-class DatabaseConf
+class ModbusDatabaseConf
 {
 public:
 	std::vector<int> telesignalings;

@@ -62,7 +62,7 @@ public:
     int set_serial(int fd, int nSpeed, int nBits, char nEvent, int nStop);
 
 
-    //check existing of port configuration file
+    //check existing of port RTUSerialPortConfiguration file
     static bool conf_file_exist(string fileName)
     {
         return (access(fileName.c_str(), F_OK) != -1);
@@ -121,8 +121,8 @@ public:
 
 private:
 	int portnum = 0;
-    string strJsonFileName("");
-    Modbus_RtuSerialPortConf conf = NULL;
+    string strJsonFileName;
+    Modbus_RtuSerialPortConf rtuSerialPortConf;
     int port_fd = -1;
     int collectPeriod = 0;
     atomic<bool> isCanceled;

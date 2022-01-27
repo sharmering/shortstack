@@ -4,10 +4,11 @@ CDbService DbService;
 
 STATUS CDbService::Initialize()
 {
+	string strJsonFileName = "";
 	//add Modbus-RTU datapoints into the database m_entries
 	for(int portNum = 1; portNum < 5; portNum++)
 	{
-		string strJsonFileName = "Port" + to_string(portNum) + ".json";
+		strJsonFileName = "Port" + to_string(portNum) + ".json";
 		if (MySerialDAQ::conf_file_exist(strJsonFileName))
 		{
 			ifstream inJson(strJsonFileName);
@@ -48,6 +49,36 @@ STATUS CDbService::Initialize()
 			}
 		}
 	}
+	//check ModbusDatabase Configure file
+	strJsonFileName = "ModbusDatabseConf.json";
+	if(MySerialDAQ::conf_file_exist(strJsonFileName))
+    {
+        ifstream inJson(strJsonFileName);
+        string strJson((std::istreambuf_iterator<char>(inJson)),
+            std::istreambuf_iterator<char>());
+        inJson.close();
+        //remove \r & \t
+        strJson.erase(std::remove(strJson.begin(), strJson.end(), '\r'), strJson.end());
+        strJson.erase(std::remove(strJson.begin(), strJson.end(), '\t'), strJson.end());
+        //string to object
+        bool check = JsonHelper::JsonToObject(m_modbusDbConf, strJson);
+        if (check == false)
+        {
+            cout << "convert json file of " << strJsonFileName << " to ModbusDatabaseConf object failed." << endl;
+        }
+        else
+        {
+            for(size_t i = 0; i < m_modbusDbConf.telesignalings.size(); i++)
+            {
+                m_modbusTeleSignalSlaveTable.push_back(0);
+            }
+            for(size_t i = 0; i < m_modbusDbConf.telemetries.size(); i++)
+            {
+                m_modbusTeleMetrySlaveTable.push_back(0.0);
+            }
+        }
+    }
+
 	return STATUS();
 }
 
@@ -80,11 +111,47 @@ void CDbService::ModbusMasterUpdate(DbEntry* entries, int nentries)
 				//Update Modbus Table
             }
 		}
+		PrintMasterUpdateValue(&entry);
 	}
+	UpdateSlaveModbusTable(entries, nentries);
 }
 
 void CDbService::ModbusTcpSlaveUpdate(DbEntry* entries, int nentries)
 {
+}
+
+void CDbService::PrintMasterUpdateValue(DbEntry* entry)
+{
+    if(entry->dataType == 1)
+        cout<< "innerId:" << entry->innerId << ", value:" << entry->sDigiValue << endl;
+    else
+        cout << "innerId:" << entry->innerId << ", value:" << entry->dbValue << endl;
+}
+
+void CDbService::UpdateSlaveModbusTable(DbEntry* entries, int nentries)
+{
+    for (int i = 0; i < nentries; i++)
+	{
+		DbEntry& entry = entries[i];
+		if(entry.dataType == 1)
+        {
+            std::vector<int>::iterator it = std::find (m_modbusDbConf.telesignalings.begin(), m_modbusDbConf.telesignalings.end(), entry.innerId);
+            if (it != m_modbusDbConf.telesignalings.end())
+            {
+                int dist = std::distance(m_modbusDbConf.telesignalings.begin(), it);
+                m_modbusTeleSignalSlaveTable[dist] = (char)(entry.sDigiValue);
+            }
+        }
+        else
+        {
+            std::vector<int>::iterator it = std::find(m_modbusDbConf.telemetries.begin(), m_modbusDbConf.telemetries.end(), entry.innerId);
+            if (it != m_modbusDbConf.telemetries.end())
+            {
+                int dist = std::distance(m_modbusDbConf.telemetries.begin(), it);
+                m_modbusTeleMetrySlaveTable[dist] = (float)(entry.dbValue);
+            }
+        }
+	}
 }
 
 CDbService::DbEntry* CDbService::FindEntry(int innerId)
@@ -156,6 +223,8 @@ CDbService::CDbService()
 	assert(m_pCDbSerivce == NULL);
 	if (m_pCDbSerivce == NULL)
 		m_pCDbSerivce = this;
+//	m_modbusDbConf = NULL;
+//	m_entries = NULL;
 }
 
 CDbService::~CDbService()
